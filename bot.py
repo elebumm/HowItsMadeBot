@@ -1,19 +1,26 @@
+# Imports
+
 from urllib.request import urlopen
+from moviepy.video.io.VideoFileClip import VideoFileClip
 from pytube import YouTube
+import requests
 import imgurpython
 import re
 import praw
 import random
-import requests
 import bs4
-import moviepy
-
+import subprocess
+from decimal import Decimal
 
 # link to the How it's made youtube video query
 linkQuery = "https://www.youtube.com/results?search_query=how+its+made"
 
 # pages is a list to hold all links so we don't recieve duplicates
 pages = set()
+
+# Fairly standard naming scheme...
+videoName = 0
+gifName = 0
 
 # reddit credentials
 redditUsername = "LewisTheRobot"
@@ -39,23 +46,56 @@ def findYoutubeVideoLink(youtubeLinkQuery):
 
 # function that grabs the youtube video that has been grabbed by findYoutubeVideoLink
 def downloadYoutubeVideo(youtubeLink):
+    global videoName
+    videoName += 1
     yt = YouTube(youtubeLink)
-    video = yt.get('mp4')
+    yt.set_filename(videoName)
+    # Sadly low quality however it's usually the only one available (Seriously science channel...)
+    video = yt.get('mp4', '360p')
     print("Downloading video... this may take a little bit...")
     video.download('videos/')
-    print("Video downloaded!")
+    print("Video downloaded at videos/" + str(videoName) + '.mp4!')
+    return 'videos/' + str(videoName) + '.mp4'
+
+
+# function that grabs time of the video downloaded in order to grab a random time later on
+# Uses ffmpeg to grab time of the youtube video that has been downloaded
+def grabTimeOfDownloadedYoutubeVideo(youtubeVideo):
+    process = subprocess.Popen(['/usr/local/bin/ffmpeg', '-i', youtubeVideo], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout, stderr = process.communicate()
+    # matches does a regex scan and finds duration of video that has been downloaded
+    matches = re.search(r"Duration:\s(?P<hours>\d+?):(?P<minutes>\d+?):(?P<seconds>\d+\.\d+?),", str(stdout)).groupdict()
+    hours = int(matches['hours'])
+    minutes = int(matches['minutes'])
+    seconds = int(Decimal(matches['seconds']))
+    print("Length of video is: " + str(minutes) + " minutes. As well as " + str(Decimal(seconds)) + " seconds.")
+    return matches['minutes'], matches['seconds']
 
 
 # function that takes youtube video and turns it into a gif
-def turnYoutubeVideoIntoGif(youtubeVideo):
-    print("You still got to do this shit lmfao")
-    clip = ()
+def turnYoutubeVideoIntoGif(youtubeVideo, minutes, seconds):
+    global gifName
+    # randomize points of the video
+    randomLengthMinutes = random.randint(0, int(minutes))
+    randomLengthSeconds = random.randint(0, int(Decimal(seconds)))
+    randomLengthSecondsEnd = int(randomLengthSeconds) + 4
+    gifName += 1
+    print("Converting video into gif...")
+    clip = (VideoFileClip(youtubeVideo)
+            .subclip((int(randomLengthMinutes), int(randomLengthSeconds)), (int(randomLengthMinutes), int(randomLengthSecondsEnd))))
+    clip.write_gif("gifs/how-its-made" + str(gifName) + ".gif")
+    print("Gif has been created!!!")
 
 
-# Find package that converts mp4's to gifs..
+# Takes gif and uploads to imgur and returns upload link in order to upload to reddit
+def uploadGifToImgur(gif):
+    print("todo")
 
 
-youtube_link = findYoutubeVideoLink(linkQuery)
-downloadYoutubeVideo(youtube_link)
 
+while True:
+    youtube_link = findYoutubeVideoLink(linkQuery)
+    youtubeVideo = downloadYoutubeVideo(youtube_link)
+    (minutes, seconds) = grabTimeOfDownloadedYoutubeVideo(youtubeVideo)
+    turnYoutubeVideoIntoGif(youtubeVideo, minutes, seconds)
 
