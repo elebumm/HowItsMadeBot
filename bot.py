@@ -2,7 +2,6 @@
 from urllib.request import urlopen
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from pytube import YouTube
-import requests
 import imgurpython
 import re
 import praw
@@ -20,6 +19,10 @@ pages = set()
 # Fairly standard naming scheme...
 videoName = 0
 gifName = 0
+
+# imgur credentials
+imgurClientId = "b01297eb68376c7"
+imgurClientSecret = "0f7006ff650c755924a1cf531036c4820cfd8c72"
 
 # reddit credentials
 redditUsername = "LewisTheRobot"
@@ -72,6 +75,7 @@ def grabTimeOfDownloadedYoutubeVideo(youtubeVideo):
 
 
 # function that takes youtube video and turns it into a gif
+# Currently the gifs are set to be 4 seconds long.
 def turnYoutubeVideoIntoGif(youtubeVideo, minutes, seconds):
     global gifName
     # randomize points of the video
@@ -82,18 +86,24 @@ def turnYoutubeVideoIntoGif(youtubeVideo, minutes, seconds):
     print("Converting video into gif...")
     clip = (VideoFileClip(youtubeVideo)
             .subclip((int(randomLengthMinutes), int(randomLengthSeconds)), (int(randomLengthMinutes), int(randomLengthSecondsEnd))))
-    clip.write_gif("gifs/how-its-made" + str(gifName) + ".gif")
+    clip.write_gif("gifs/how-its-made" + str(gifName) + ".gif", fps=15)
     print("Gif has been created!!!")
 
 
 # Takes gif and uploads to imgur and returns upload link in order to upload to reddit
-def uploadGifToImgur(gif):
-    print("todo")
+def uploadGifToImgur(gif, clientId, clientSecret):
+    # Uploading Gif to Imgur
+    print("Uploading " + gif + " to imgur.")
+    i = imgurpython.ImgurClient(clientId, clientSecret).upload_from_path(path=gif, config=None, anon=True)
+    link = i.get('link')
+    print("Gif can be found at: " + link)
+    return link
 
-
+# Main Loop
 while True:
     youtube_link = findYoutubeVideoLink(linkQuery)
     youtubeVideo = downloadYoutubeVideo(youtube_link)
     (minutes, seconds) = grabTimeOfDownloadedYoutubeVideo(youtubeVideo)
     turnYoutubeVideoIntoGif(youtubeVideo, minutes, seconds)
+    uploadGifToImgur("gifs/" + "how-its-made" + str(gifName) + ".gif", imgurClientId, imgurClientSecret)
 
