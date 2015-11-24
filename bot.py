@@ -1,5 +1,4 @@
 # Imports
-
 from urllib.request import urlopen
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from pytube import YouTube
@@ -90,7 +89,6 @@ def turnYoutubeVideoIntoGif(youtubeVideo, minutes, seconds):
 # Takes gif and uploads to imgur and returns upload link in order to upload to reddit
 def uploadGifToImgur(gif):
     print("todo")
-
 
 
 while True:
