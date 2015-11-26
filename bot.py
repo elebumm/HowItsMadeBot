@@ -28,8 +28,8 @@ imgurClientId = "b01297eb68376c7"
 imgurClientSecret = "0f7006ff650c755924a1cf531036c4820cfd8c72"
 
 # reddit credentials
-redditUsername = "LewisTheRobot"
-redditPassword = "lewismenelaws"
+redditUsername = input("Please input Reddit Username: ")
+redditPassword = input("Please input Reddit Password: ")
 
 
 # function that will check to see if you have 'videos' and 'gifs'
@@ -125,10 +125,6 @@ def uploadGifToReddit(imgurLink, username, password):
     print("Uploading link to reddit")
     subreddit.submit(title="How it's made " + str(gifName), url=imgurLink)
 
-
-
-
-
 # Main Loop
 while True:
     if directoryFlag is False:
@@ -140,5 +136,3 @@ while True:
     imgurLink = uploadGifToImgur("gifs/" + "how-its-made" + str(gifName) + ".gif", imgurClientId, imgurClientSecret)
     uploadGifToReddit(imgurLink, redditUsername, redditPassword)
 
-
-    # todo - post imgur link to reddit
